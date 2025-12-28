@@ -16,6 +16,7 @@ test-integration:
 	go test $(TESTFLAGS) -tags=integration ./...
 
 test-e2e:
+	$(MAKE) build
 	go test $(TESTFLAGS) -tags=e2e ./...
 
 test: test-unit test-integration test-e2e

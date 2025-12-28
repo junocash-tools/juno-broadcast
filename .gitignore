@@ -3,6 +3,8 @@
 /tmp/
 /tmp-*/
 
+# Build
+/bin/
+
 # OS
 .DS_Store
-
