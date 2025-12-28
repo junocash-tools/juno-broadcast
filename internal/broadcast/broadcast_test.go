@@ -12,7 +12,7 @@ import (
 
 type fakeRPC struct {
 	sendRawTransaction func(ctx context.Context, txHex string) (string, error)
-	call              func(ctx context.Context, method string, params any, out any) error
+	call               func(ctx context.Context, method string, params any, out any) error
 }
 
 func (f fakeRPC) Call(ctx context.Context, method string, params any, out any) error {
@@ -152,4 +152,3 @@ func TestWaitForConfirmations_ZeroReturnsOnMempool(t *testing.T) {
 		t.Fatalf("expected mempool check")
 	}
 }
-

@@ -62,4 +62,3 @@ func TestRun_Status_NotFound(t *testing.T) {
 		t.Fatalf("expected not_found error, got: %s", out.String())
 	}
 }
-

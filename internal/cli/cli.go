@@ -123,7 +123,7 @@ func runSubmit(args []string, factory Factory, stdout, stderr io.Writer) int {
 			return writeErr(stdout, stderr, jsonOut, "node_rpc_error", err.Error())
 		}
 		return writeOK(stdout, jsonOut, map[string]any{
-			"txid":          txid,
+			"txid":           txid,
 			"in_mempool":     st.InMempool,
 			"confirmations":  st.Confirmations,
 			"blockhash":      st.BlockHash,

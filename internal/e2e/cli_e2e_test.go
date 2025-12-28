@@ -66,16 +66,16 @@ func TestCLI_SubmitAndStatus_E2E(t *testing.T) {
 	}
 
 	deadline := time.Now().Add(10 * time.Second)
-		for time.Now().Before(deadline) {
-			out := mustRunBin(t, bin, "status",
-				"--rpc-url", jd.RPCURL,
-				"--rpc-user", jd.RPCUser,
-				"--rpc-pass", jd.RPCPassword,
-				"--txid", txid,
-				"--json",
-			)
-			if err := json.Unmarshal(out, &statusResp); err != nil {
-				t.Fatalf("invalid json: %v\n%s", err, string(out))
+	for time.Now().Before(deadline) {
+		out := mustRunBin(t, bin, "status",
+			"--rpc-url", jd.RPCURL,
+			"--rpc-user", jd.RPCUser,
+			"--rpc-pass", jd.RPCPassword,
+			"--txid", txid,
+			"--json",
+		)
+		if err := json.Unmarshal(out, &statusResp); err != nil {
+			t.Fatalf("invalid json: %v\n%s", err, string(out))
 		}
 		if statusResp.Status != "ok" {
 			t.Fatalf("unexpected status response: %s", string(out))
@@ -89,7 +89,7 @@ func TestCLI_SubmitAndStatus_E2E(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-		t.Fatalf("timeout waiting for confirmations")
+	t.Fatalf("timeout waiting for confirmations")
 }
 
 func mustCreateOrchardAddress(t *testing.T, ctx context.Context, jd *containers.Junocashd) string {
