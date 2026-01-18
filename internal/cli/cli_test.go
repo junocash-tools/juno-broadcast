@@ -39,6 +39,9 @@ func TestRun_Submit_RequiresRawTx(t *testing.T) {
 	if code == 0 {
 		t.Fatalf("expected non-zero exit code")
 	}
+	if !strings.Contains(out.String(), `"version":"v1"`) {
+		t.Fatalf("expected json version, got: %s", out.String())
+	}
 	if !strings.Contains(out.String(), `"status":"err"`) {
 		t.Fatalf("expected json error, got: %s", out.String())
 	}
@@ -57,6 +60,9 @@ func TestRun_Status_NotFound(t *testing.T) {
 
 	if code == 0 {
 		t.Fatalf("expected non-zero exit code")
+	}
+	if !strings.Contains(out.String(), `"version":"v1"`) {
+		t.Fatalf("expected json version, got: %s", out.String())
 	}
 	if !strings.Contains(out.String(), `"code":"not_found"`) {
 		t.Fatalf("expected not_found error, got: %s", out.String())

@@ -1,0 +1,143 @@
+openapi: 3.0.3
+info:
+  title: juno-broadcast HTTP API
+  version: v1
+servers:
+  - url: http://127.0.0.1:8080
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthzResponse"
+  /v1/tx/submit:
+    post:
+      summary: Submit a signed raw transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitRequest"
+      responses:
+        "200":
+          description: Submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmitResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Node RPC error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /v1/tx/{txid}:
+    get:
+      summary: Get transaction status
+      parameters:
+        - name: txid
+          in: path
+          required: true
+          schema:
+            type: string
+            description: 32-byte hex txid (64 chars)
+      responses:
+        "200":
+          description: Status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TxStatus"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Unknown txid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Node RPC error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    HealthzResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+      additionalProperties: true
+    SubmitRequest:
+      type: object
+      required: [raw_tx_hex]
+      properties:
+        raw_tx_hex:
+          type: string
+          description: Signed raw tx bytes, hex-encoded
+        wait_confirmations:
+          type: integer
+          format: int64
+          minimum: 1
+          description: If set, block until the tx reaches this confirmation count (best-effort)
+      additionalProperties: false
+    SubmitResponse:
+      type: object
+      required: [txid]
+      properties:
+        txid:
+          type: string
+          description: 32-byte hex txid (64 chars)
+        status:
+          $ref: "#/components/schemas/TxStatus"
+      additionalProperties: true
+    TxStatus:
+      type: object
+      required: [txid, in_mempool, confirmations]
+      properties:
+        txid:
+          type: string
+        in_mempool:
+          type: boolean
+        confirmations:
+          type: integer
+          format: int64
+          minimum: 0
+        blockhash:
+          type: string
+          description: 32-byte hex block hash (64 chars), when confirmed
+      additionalProperties: true
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+          additionalProperties: true
+      additionalProperties: true

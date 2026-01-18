@@ -20,6 +20,8 @@ import (
 	"github.com/Abdullah1738/juno-sdk-go/junocashd"
 )
 
+const jsonVersionV1 = "v1"
+
 type Runner interface {
 	Submit(ctx context.Context, rawTxHex string) (string, error)
 	Status(ctx context.Context, txid string) (broadcast.TxStatus, bool, error)
@@ -339,8 +341,9 @@ func writeOK(w io.Writer, jsonOut bool, payload any) int {
 		return 0
 	}
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"status": "ok",
-		"data":   payload,
+		"version": jsonVersionV1,
+		"status":  "ok",
+		"data":    payload,
 	})
 	return 0
 }
@@ -348,7 +351,8 @@ func writeOK(w io.Writer, jsonOut bool, payload any) int {
 func writeErr(stdout, stderr io.Writer, jsonOut bool, code, msg string) int {
 	if jsonOut {
 		_ = json.NewEncoder(stdout).Encode(map[string]any{
-			"status": "err",
+			"version": jsonVersionV1,
+			"status":  "err",
 			"error": map[string]any{
 				"code":    code,
 				"message": msg,
