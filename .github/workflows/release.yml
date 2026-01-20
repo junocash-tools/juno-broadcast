@@ -1,0 +1,99 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  BIN_NAME: juno-broadcast
+  GO_MAIN: ./cmd/juno-broadcast
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub release (if needed)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="${{ github.ref_name }}"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            exit 0
+          fi
+
+          notes="Release $tag"
+          if [ "$tag" = "v1.0" ]; then
+            notes="Initial Version"
+          fi
+
+          gh release create "$tag" --notes "$notes"
+
+  build:
+    needs: create-release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build binary
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p dist
+
+          export GOOS="${{ matrix.goos }}"
+          export GOARCH="${{ matrix.goarch }}"
+          export CGO_ENABLED=0
+
+          go build -trimpath -ldflags "-s -w" -o "dist/${BIN_NAME}" "${GO_MAIN}"
+
+          if [ "$GOOS" = "linux" ]; then
+            file "dist/${BIN_NAME}" | grep -q "statically linked"
+          fi
+
+      - name: Package
+        shell: bash
+        run: |
+          set -euxo pipefail
+          tag="${{ github.ref_name }}"
+          archive="${BIN_NAME}_${tag}_${{ matrix.goos }}_${{ matrix.goarch }}.tar.gz"
+
+          tar -C dist -czf "dist/${archive}" "${BIN_NAME}"
+
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "dist/${archive}" > "dist/${archive}.sha256"
+          else
+            shasum -a 256 "dist/${archive}" > "dist/${archive}.sha256"
+          fi
+
+      - name: Upload to GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euxo pipefail
+          tag="${{ github.ref_name }}"
+          archive="${BIN_NAME}_${tag}_${{ matrix.goos }}_${{ matrix.goarch }}.tar.gz"
+          gh release upload "$tag" "dist/${archive}" "dist/${archive}.sha256" --clobber
+
